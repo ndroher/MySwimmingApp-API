@@ -10,6 +10,8 @@ add_filter('rest_endpoints', function($endpoints) {
 $dirbase = get_template_directory();
 require_once $dirbase . '/endpoints/user_get.php';
 require_once $dirbase . '/endpoints/user_post.php';
+require_once $dirbase . '/endpoints/display_name_put.php';
+
 
 require_once $dirbase . '/endpoints/password.php';
 

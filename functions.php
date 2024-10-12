@@ -8,12 +8,28 @@ add_filter('rest_endpoints', function($endpoints) {
 });
 
 $dirbase = get_template_directory();
-require_once $dirbase . '/endpoints/user_get.php';
-require_once $dirbase . '/endpoints/user_post.php';
-require_once $dirbase . '/endpoints/display_name_put.php';
 
+//ENDPOINTS USER
+require_once $dirbase . '/endpoints/user/user_get.php';
+require_once $dirbase . '/endpoints/user/user_post.php';
+require_once $dirbase . '/endpoints/user/display_name_put.php';
+require_once $dirbase . '/endpoints/user/password.php';
 
-require_once $dirbase . '/endpoints/password.php';
+//CUSTOM POST TYPES
+require_once $dirbase . '/custom-post-types/treinos_cpt.php';
+require_once $dirbase . '/custom-post-types/exercicios_cpt.php';
+
+//ENDPOINTS CPT TREINO
+require_once $dirbase . '/endpoints/treino/treino_get.php';
+require_once $dirbase . '/endpoints/treino/treino_post.php';
+require_once $dirbase . '/endpoints/treino/treino_put.php';
+require_once $dirbase . '/endpoints/treino/treino_delete.php';
+
+//ENDPOINTS CPT EXERCICIO
+require_once $dirbase . '/endpoints/exercicio/exercicio_get.php';
+require_once $dirbase . '/endpoints/exercicio/exercicio_post.php';
+require_once $dirbase . '/endpoints/exercicio/exercicio_put.php';
+require_once $dirbase . '/endpoints/exercicio/exercicio_delete.php';
 
 function change_api() {
     return 'json';

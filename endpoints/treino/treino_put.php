@@ -7,57 +7,109 @@ function api_treino_put($request) {
         return new WP_Error('error', 'Usuário não autorizado', ['status' => 401]);
     }
 
-    $treino_id = $request['id'];
+    // Obter ID do treino a ser atualizado
+    $treino_id = intval($request['id']);
+    $treino = get_post($treino_id);
+
+    if (!$treino || $treino->post_author != $user_id) {
+        return new WP_Error('error', 'Treino não encontrado ou acesso negado', ['status' => 404]);
+    }
+
+    // Campos principais
     $nome = sanitize_text_field($request['nome']);
     $tamanho_da_piscina = sanitize_text_field($request['tamanho_da_piscina']);
-    $exercicios = $request['exercicios'];
+    $chegadas = $request['chegadas'];
 
-    // Atualiza o post do treino
-    $treino = array(
-        'ID' => $treino_id,
-        'post_title' => $nome,
-        'post_status' => 'publish',
-        'post_author' => $user_id,
-    );
+    if (empty($chegadas) || !is_array($chegadas)) {
+        return new WP_Error('error', 'Nenhum exercício fornecido', ['status' => 400]);
+    }
 
-    // Atualiza o post no banco de dados
-    wp_update_post($treino);
+    // Validação dos exercícios
+    foreach ($chegadas as $chegada) {
+        $exercicio_ida_id = $chegada['exercicio_ida']['id'];
+        $exercicio_volta_id = $chegada['exercicio_volta']['id'];
 
-    // Inicializa os dados a serem salvos
-    $distancia_total = 0;
-    $repeticoes_por_tipo_de_nado = [];
-    $equipamentos_utilizados = [];
+        $exercicio_ida = get_post($exercicio_ida_id);
+        $exercicio_volta = get_post($exercicio_volta_id);
 
-    // Itera sobre os exercícios para calcular as repetições e a distância total
-    foreach ($exercicios as $exercicio) {
-        foreach ($exercicio['laps'] as $lap) {
-            $ida_repetitions = $lap['repetitions'];
-            $volta_repetitions = $lap['repetitions'];
-
-            // Calcular a distância total com base nas chegadas
-            $distancia_total += ($ida_repetitions + $volta_repetitions) * $tamanho_da_piscina;
-
-            // Contabilizar repetições por tipo de nado
-            $repeticoes_por_tipo_de_nado[$lap['exercise_ida']['stroke_type']] = 
-                ($repeticoes_por_tipo_de_nado[$lap['exercise_ida']['stroke_type']] ?? 0) + $ida_repetitions;
-            $repeticoes_por_tipo_de_nado[$lap['exercise_volta']['stroke_type']] = 
-                ($repeticoes_por_tipo_de_nado[$lap['exercise_volta']['stroke_type']] ?? 0) + $volta_repetitions;
-
-            // Coletar equipamentos utilizados
-            $equipamentos_utilizados = array_merge($equipamentos_utilizados, $lap['exercise_ida']['equipment'], $lap['exercise_volta']['equipment']);
+        if (!$exercicio_ida || !$exercicio_volta) {
+            return new WP_Error('error', 'Exercício não encontrado', ['status' => 404]);
         }
     }
 
-    // Remove duplicatas de equipamentos
-    $equipamentos_utilizados = array_unique($equipamentos_utilizados);
+    // Processa os exercícios e calcula informações
+    $distancia_total = 0;
+    $repeticoes_por_tipo_de_nado = [];
+    $equipamentos_utilizados = [];
+    $exercicios_realizados = [];
 
-    // Atualiza os meta dados
+    foreach ($chegadas as $chegada) {
+        $exercicio_ida_id = $chegada['exercicio_ida']['id'];
+        $exercicio_volta_id = $chegada['exercicio_volta']['id'];
+
+        // Busca os detalhes dos exercícios pelo ID
+        $exercicio_ida = get_post($exercicio_ida_id);
+        $exercicio_volta = get_post($exercicio_volta_id);
+
+        // Recupera os termos das taxonomias
+        $tipo_nado_ida = wp_get_post_terms($exercicio_ida_id, 'tipo_nado', array("fields" => "names"));
+        $tipo_nado_volta = wp_get_post_terms($exercicio_volta_id, 'tipo_nado', array("fields" => "names"));
+
+        // Coleta os equipamentos utilizados
+        $equipamentos_ida = wp_get_post_terms($exercicio_ida_id, 'equipamentos', array("fields" => "names"));
+        $equipamentos_volta = wp_get_post_terms($exercicio_volta_id, 'equipamentos', array("fields" => "names"));
+
+        $repeticoes = $chegada['repeticoes'];
+
+        // Calcula a distância total
+        $distancia_total += ($tamanho_da_piscina * 2) * $repeticoes;
+
+        // Calcula repetições por tipo de nado
+        foreach ($tipo_nado_ida as $tipo) {
+            if (!isset($repeticoes_por_tipo_de_nado[$tipo])) {
+                $repeticoes_por_tipo_de_nado[$tipo] = 0;
+            }
+            $repeticoes_por_tipo_de_nado[$tipo] += $repeticoes;
+        }
+
+        foreach ($tipo_nado_volta as $tipo) {
+            if (!isset($repeticoes_por_tipo_de_nado[$tipo])) {
+                $repeticoes_por_tipo_de_nado[$tipo] = 0;
+            }
+            $repeticoes_por_tipo_de_nado[$tipo] += $repeticoes;
+        }
+
+        // Coleta os equipamentos utilizados
+        $equipamentos_utilizados = array_merge($equipamentos_utilizados, $equipamentos_ida, $equipamentos_volta);
+
+        // Armazena os dados do exercício realizado
+        $exercicios_realizados[] = array(
+            'exercicio_ida' => $exercicio_ida_id,
+            'exercicio_volta' => $exercicio_volta_id,
+            'repeticoes' => $repeticoes,
+        );
+    }
+
+    // Remove equipamentos duplicados
+    $equipamentos_utilizados = array_unique($equipamentos_utilizados);
+    $equipamentos_utilizados = array_values($equipamentos_utilizados);
+
+    // Atualiza os campos principais do post
+    wp_update_post(array(
+        'ID' => $treino_id,
+        'post_title' => $nome,
+        'post_status' => 'publish',
+    ));
+
+    // Atualiza os campos personalizados
     update_post_meta($treino_id, 'tamanho_da_piscina', $tamanho_da_piscina);
     update_post_meta($treino_id, 'distancia_total', $distancia_total);
-    update_post_meta($treino_id, 'repeticoes_por_tipo_de_nado', $repeticoes_por_tipo_de_nado);
-    update_post_meta($treino_id, 'equipamentos_utilizados', $equipamentos_utilizados);
+    update_post_meta($treino_id, 'repeticoes_por_tipo_de_nado', json_encode($repeticoes_por_tipo_de_nado));
+    update_post_meta($treino_id, 'equipamentos_utilizados', json_encode($equipamentos_utilizados));
 
-    // Resposta de sucesso
+    // Atualiza o campo de exercícios realizados
+    update_post_meta($treino_id, 'exercicios_realizados', json_encode($exercicios_realizados));
+
     $response = array(
         'id' => $treino_id,
         'nome' => $nome,
@@ -65,6 +117,7 @@ function api_treino_put($request) {
         'distancia_total' => $distancia_total,
         'repeticoes_por_tipo_de_nado' => $repeticoes_por_tipo_de_nado,
         'equipamentos_utilizados' => $equipamentos_utilizados,
+        'exercicios_realizados' => $exercicios_realizados,
     );
 
     return rest_ensure_response($response);

@@ -14,6 +14,7 @@ require_once $dirbase . '/endpoints/user/user_get.php';
 require_once $dirbase . '/endpoints/user/user_post.php';
 require_once $dirbase . '/endpoints/user/display_name_put.php';
 require_once $dirbase . '/endpoints/user/password.php';
+require_once $dirbase . '/endpoints/user/profile_picture.php';
 
 //CUSTOM POST TYPES
 require_once $dirbase . '/custom-post-types/treinos_cpt.php';

@@ -22,7 +22,7 @@ function update_user_goals($request) {
 
 function register_user_goals_endpoint() {
     register_rest_route('api', '/user/goals', array(
-        'methods' => 'POST',
+        'methods' => 'PUT',
         'callback' => 'update_user_goals',
         'permission_callback' => '__return_true'
     ));

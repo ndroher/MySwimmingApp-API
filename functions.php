@@ -17,7 +17,7 @@ require_once $dirbase . '/endpoints/user/user_post.php';
 require_once $dirbase . '/endpoints/user/display_name_put.php';
 require_once $dirbase . '/endpoints/user/password.php';
 require_once $dirbase . '/endpoints/user/profile_picture.php';
-require_once $dirbase . '/endpoints/user/user_goals_post.php';
+require_once $dirbase . '/endpoints/user/user_goals_put.php';
 require_once $dirbase . '/endpoints/user/user_goals_progress.php';
 require_once $dirbase . '/endpoints/user/user_profile.php';
 

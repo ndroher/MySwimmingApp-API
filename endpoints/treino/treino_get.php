@@ -1,13 +1,7 @@
 <?php
 function api_treino_get($request) {
-    $user = wp_get_current_user();
-    $user_id = $user->ID;
-
-    if ($user_id === 0) {
-        return new WP_Error('error', 'Usuário não autorizado', ['status' => 401]);
-    }
-
-    $treino_id = $request['id'];
+    $user_id = $request['user_id'];
+    $treino_id = $request['treino_id'];
 
     // Função para obter os dados dos exercícios associados
     function get_exercicios_treino($treino_id) {
@@ -63,6 +57,7 @@ function api_treino_get($request) {
         $response = array(
             'id' => $treino->ID,
             'nome' => $treino->post_title,
+            'post_date' => $treino->post_date,
             'tamanho_da_piscina' => get_post_meta($treino->ID, 'tamanho_da_piscina', true),
             'distancia_total' => get_post_meta($treino->ID, 'distancia_total', true),
             'repeticoes_por_tipo_de_nado' => json_decode(get_post_meta($treino->ID, 'repeticoes_por_tipo_de_nado', true), true),

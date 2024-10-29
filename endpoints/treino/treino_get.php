@@ -43,6 +43,29 @@ function api_treino_get($request) {
         return $exercicios_data;
     }
 
+    //Função para formatar Data
+    function formatDate($dateString) {
+        $date = new DateTime($dateString);
+        
+        // Define a localidade para português
+        setlocale(LC_TIME, 'pt_BR.utf8');
+        $formattedDate = strftime('%A, %d de %B de %Y, %H:%M', $date->getTimestamp());
+    
+        $formattedDate = strtolower($formattedDate);
+        
+        // Formata dia da semana
+        $formattedDate = preg_replace_callback('/^(.*?)([a-z])/', function ($matches) {
+            return ucfirst($matches[0]);
+        }, $formattedDate);
+        
+        // Formata mês
+        $formattedDate = preg_replace_callback('/(\bde )([a-z])/', function ($matches) {
+            return $matches[1] . ucfirst($matches[2]);
+        }, $formattedDate);
+    
+        return $formattedDate;
+    }
+
     if ($treino_id) {
         // Recupera um treino específico
         $treino = get_post($treino_id);
@@ -57,7 +80,7 @@ function api_treino_get($request) {
         $response = array(
             'id' => $treino->ID,
             'nome' => $treino->post_title,
-            'post_date' => $treino->post_date,
+            'post_date' => formatDate($treino->post_date),
             'tamanho_da_piscina' => get_post_meta($treino->ID, 'tamanho_da_piscina', true),
             'distancia_total' => get_post_meta($treino->ID, 'distancia_total', true),
             'repeticoes_por_tipo_de_nado' => json_decode(get_post_meta($treino->ID, 'repeticoes_por_tipo_de_nado', true), true),

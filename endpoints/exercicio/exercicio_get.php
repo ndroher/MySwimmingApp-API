@@ -51,8 +51,8 @@ function api_exercicio_get($request) {
             'posts_per_page' => -1
         ));
 
-        // Combina os resultados
-        $all_exercicios = array_merge($exercicios, $exercicios_personalizados);
+        // Combina os resultados, sem duplicatas
+        $all_exercicios = array_unique(array_merge($exercicios, $exercicios_personalizados), SORT_REGULAR);
 
         $response = array();
         foreach ($all_exercicios as $exercicio) {

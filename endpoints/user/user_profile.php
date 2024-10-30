@@ -24,16 +24,19 @@ function api_user_profile($request) {
     }
 
     $ultimo_treino_busca = get_posts([
-        'post_type' => 'treinos',  // Supondo que o tipo de post seja 'treinos'
-        'author' => $user_id,      // Filtra pelo ID do usuário
-        'posts_per_page' => 1,     // Limita a apenas 1 post
-        'orderby' => 'date',       // Ordena pela data de criação
-        'order' => 'DESC',         // Em ordem decrescente (o mais recente primeiro)
+        'post_type' => 'treinos',
+        'author' => $user_id,
+        'posts_per_page' => 1,
+        'orderby' => 'date',
+        'order' => 'DESC',
     ]);
 
-    $ultimo_treino_id = $ultimo_treino_busca[0]->ID;
-
-    $ultimo_treino = api_treino_get(['user_id' => $user_id, 'treino_id' => $ultimo_treino_id]);
+    if (empty($ultimo_treino_busca)) {
+        $ultimo_treino = null;
+    } else {
+        $ultimo_treino_id = $ultimo_treino_busca[0]->ID;
+        $ultimo_treino = api_treino_get(['user_id' => $user_id, 'treino_id' => $ultimo_treino_id]);
+    }
 
     $response = [
         'id' => $user_id,
@@ -41,7 +44,7 @@ function api_user_profile($request) {
         'display_name' => $display_name,
         'avatar_url' => $avatar_url,
         'goals' => $goals_progress->data,
-        'ultimo_treino' => $ultimo_treino->data,
+        'ultimo_treino' => $ultimo_treino ? $ultimo_treino->data : null,
     ];
 
     return rest_ensure_response($response);

@@ -32,8 +32,30 @@ function api_exercicio_get($request) {
             'posts_per_page' => -1
         ));
 
+       // Recupera todos os exercícios onde 'personalizado' é vazio ou 'false'
+        $exercicios_personalizados = get_posts(array(
+            'post_type' => 'exercicios',
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'personalizado',
+                    'value' => '',
+                    'compare' => '='
+                ),
+                array(
+                    'key' => 'personalizado',
+                    'value' => 'false',
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => -1
+        ));
+
+        // Combina os resultados
+        $all_exercicios = array_merge($exercicios, $exercicios_personalizados);
+
         $response = array();
-        foreach ($exercicios as $exercicio) {
+        foreach ($all_exercicios as $exercicio) {
             $response[] = array(
                 'id' => $exercicio->ID,
                 'nome' => $exercicio->post_title,

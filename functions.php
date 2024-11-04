@@ -21,6 +21,7 @@ require_once $dirbase . '/endpoints/user/user_goals_put.php';
 require_once $dirbase . '/endpoints/user/user_goals_progress.php';
 require_once $dirbase . '/endpoints/user/user_profile.php';
 require_once $dirbase . '/endpoints/user/user_history.php';
+require_once $dirbase . '/endpoints/user/user_treino_get.php';
 
 //CUSTOM POST TYPES
 require_once $dirbase . '/custom-post-types/treinos_cpt.php';

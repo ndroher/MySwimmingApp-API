@@ -13,6 +13,7 @@ $dirbase = get_template_directory();
 require_once $dirbase . '/endpoints/user/user.php';
 
 require_once $dirbase . '/endpoints/user/user_get.php';
+require_once $dirbase . '/endpoints/user/users_get.php';
 require_once $dirbase . '/endpoints/user/user_post.php';
 require_once $dirbase . '/endpoints/user/display_name_put.php';
 require_once $dirbase . '/endpoints/user/password.php';

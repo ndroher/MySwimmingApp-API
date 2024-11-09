@@ -7,12 +7,12 @@ function api_treino_put($request) {
         return new WP_Error('error', 'Usuário não autorizado', ['status' => 401]);
     }
 
-    // Obter ID do treino a ser atualizado
-    $treino_id = intval($request['id']);
+    // Obtém o ID do treino da requisição
+    $treino_id = $request['id'];
     $treino = get_post($treino_id);
 
-    if (!$treino || $treino->post_author != $user_id) {
-        return new WP_Error('error', 'Treino não encontrado ou acesso negado', ['status' => 404]);
+    if (!$treino || $treino->post_type !== 'treinos' || $treino->post_author != $user_id) {
+        return new WP_Error('error', 'Treino não encontrado ou não autorizado', ['status' => 404]);
     }
 
     // Campos principais
@@ -24,7 +24,12 @@ function api_treino_put($request) {
         return new WP_Error('error', 'Nenhum exercício fornecido', ['status' => 400]);
     }
 
-    // Validação dos exercícios
+    // Processamento dos exercícios e validação
+    $distancia_total = 0;
+    $repeticoes_por_tipo_de_nado = [];
+    $equipamentos_utilizados = [];
+    $exercicios_realizados = [];
+
     foreach ($chegadas as $chegada) {
         $exercicio_ida_id = $chegada['exercicio_ida']['id'];
         $exercicio_volta_id = $chegada['exercicio_volta']['id'];
@@ -35,21 +40,6 @@ function api_treino_put($request) {
         if (!$exercicio_ida || !$exercicio_volta) {
             return new WP_Error('error', 'Exercício não encontrado', ['status' => 404]);
         }
-    }
-
-    // Processa os exercícios e calcula informações
-    $distancia_total = 0;
-    $repeticoes_por_tipo_de_nado = [];
-    $equipamentos_utilizados = [];
-    $exercicios_realizados = [];
-
-    foreach ($chegadas as $chegada) {
-        $exercicio_ida_id = $chegada['exercicio_ida']['id'];
-        $exercicio_volta_id = $chegada['exercicio_volta']['id'];
-
-        // Busca os detalhes dos exercícios pelo ID
-        $exercicio_ida = get_post($exercicio_ida_id);
-        $exercicio_volta = get_post($exercicio_volta_id);
 
         // Recupera os termos das taxonomias
         $tipo_nado_ida = wp_get_post_terms($exercicio_ida_id, 'tipo_nado', array("fields" => "names"));
@@ -94,14 +84,12 @@ function api_treino_put($request) {
     $equipamentos_utilizados = array_unique($equipamentos_utilizados);
     $equipamentos_utilizados = array_values($equipamentos_utilizados);
 
-    // Atualiza os campos principais do post
+    // Atualiza os campos personalizados do treino
     wp_update_post(array(
         'ID' => $treino_id,
-        'post_title' => $nome,
-        'post_status' => 'publish',
+        'post_title' => $nome,  // Atualiza o nome do treino
     ));
 
-    // Atualiza os campos personalizados
     update_post_meta($treino_id, 'tamanho_da_piscina', $tamanho_da_piscina);
     update_post_meta($treino_id, 'distancia_total', $distancia_total);
     update_post_meta($treino_id, 'repeticoes_por_tipo_de_nado', json_encode($repeticoes_por_tipo_de_nado));
@@ -110,6 +98,7 @@ function api_treino_put($request) {
     // Atualiza o campo de exercícios realizados
     update_post_meta($treino_id, 'exercicios_realizados', json_encode($exercicios_realizados));
 
+    // Resposta com os dados do treino atualizado
     $response = array(
         'id' => $treino_id,
         'nome' => $nome,

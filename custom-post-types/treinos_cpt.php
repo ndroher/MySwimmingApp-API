@@ -29,7 +29,7 @@ function register_treinos_cpt() {
 
 add_action('init', 'register_treinos_cpt');
 
-//CUSTOM FIELDS
+// CUSTOM FIELDS
 function add_treinos_custom_fields() {
     register_post_meta('treinos', 'tamanho_da_piscina', array(
         'show_in_rest' => true,
@@ -55,16 +55,21 @@ function add_treinos_custom_fields() {
         'single' => true,
     ));
 
-    register_post_meta('treinos', 'exercicio_id', array(
+    register_post_meta('treinos', 'exercicios_realizados', array(
         'show_in_rest' => true,
-        'type' => 'integer',
+        'type' => 'array',
         'single' => true,
-    ));
-
-    register_post_meta('treinos', 'repeticoes', array(
-        'show_in_rest' => true,
-        'type' => 'integer',
-        'single' => true,
+        'items' => array(
+            'type' => 'object',
+            'properties' => array(
+                'exercicio_id' => array(
+                    'type' => 'integer',
+                ),
+                'repeticoes' => array(
+                    'type' => 'integer',
+                ),
+            ),
+        ),
     ));
 }
 

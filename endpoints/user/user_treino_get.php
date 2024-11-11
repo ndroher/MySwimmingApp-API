@@ -1,6 +1,8 @@
 <?php
-function api_treino_get($request) {
-    $user_id = $request['user_id'];
+function user_treino_get($request) {
+    $username = $request['username'];
+    $user = get_user_by('login', $username);
+    $user_id = $user->ID;
     $treino_id = $request['treino_id'];
 
     // Função para obter os dados dos exercícios associados
@@ -26,11 +28,15 @@ function api_treino_get($request) {
                     $lap_data = [
                         'exercicio_ida' => [
                             'id' => $exercicio_ida->ID,
-                            'nome' => $exercicio_ida->post_title
+                            'nome' => $exercicio_ida->post_title,
+                            'tipo_nado' => wp_get_post_terms($exercicio_ida->ID, 'tipo_nado', array("fields" => "names")),
+                            'equipamentos' => wp_get_post_terms($exercicio_ida->ID, 'equipamentos', array("fields" => "names")),
                         ],
                         'exercicio_volta' => [
                             'id' => $exercicio_volta->ID,
-                            'nome' => $exercicio_volta->post_title
+                            'nome' => $exercicio_volta->post_title,
+                            'tipo_nado' => wp_get_post_terms($exercicio_volta->ID, 'tipo_nado', array("fields" => "names")),
+                            'equipamentos' => wp_get_post_terms($exercicio_volta->ID, 'equipamentos', array("fields" => "names")),
                         ],
                         'repeticoes' => $repeticoes
                     ];
@@ -65,8 +71,12 @@ function api_treino_get($request) {
     
         return $formattedDate;
     }
+    
+    
 
-    if ($treino_id) {
+    if (!$treino_id) {
+        return new WP_Error('error', 'ID do treino não fornecido', ['status' => 400]);
+    } else {
         // Recupera um treino específico
         $treino = get_post($treino_id);
 
@@ -87,46 +97,17 @@ function api_treino_get($request) {
             'equipamentos_utilizados' => json_decode(get_post_meta($treino->ID, 'equipamentos_utilizados', true), true),
             'exercicios' => $exercicios_data
         );
-    } else {
-        // Recupera todos os treinos do usuário
-        $treinos = get_posts(array(
-            'post_type' => 'treinos',
-            'author' => $user_id,
-            'posts_per_page' => -1
-        ));
-
-        $response = array();
-        foreach ($treinos as $treino) {
-            // Obtendo exercícios e repetições para cada treino
-            $exercicios_data = get_exercicios_treino($treino->ID);
-
-            $response[] = array(
-                'id' => $treino->ID,
-                'nome' => $treino->post_title,
-                'tamanho_da_piscina' => get_post_meta($treino->ID, 'tamanho_da_piscina', true),
-                'distancia_total' => get_post_meta($treino->ID, 'distancia_total', true),
-                'repeticoes_por_tipo_de_nado' => json_decode(get_post_meta($treino->ID, 'repeticoes_por_tipo_de_nado', true), true),
-                'equipamentos_utilizados' => json_decode(get_post_meta($treino->ID, 'equipamentos_utilizados', true), true),
-                'exercicios' => $exercicios_data
-            );
-        }
     }
-
     return rest_ensure_response($response);
 }
 
-function register_api_treino_get() {
-    register_rest_route('api', '/treino/(?P<id>\d+)', array(
+function register_user_treino_get() {
+    register_rest_route('api', '/user/(?P<username>[a-zA-Z0-9_-]+)/treino/(?P<treino_id>\d+)', array(
         'methods' => WP_REST_Server::READABLE,
-        'callback' => 'api_treino_get',
-    ));
-
-    register_rest_route('api', '/treinos', array(
-        'methods' => WP_REST_Server::READABLE,
-        'callback' => 'api_treino_get',
+        'callback' => 'user_treino_get',
     ));
 }
 
-add_action('rest_api_init', 'register_api_treino_get');
+add_action('rest_api_init', 'register_user_treino_get');
 
 ?>

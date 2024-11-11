@@ -8,11 +8,20 @@
             return rest_ensure_response($response);
         }
 
+        $attachment_id = get_user_meta($user_id, 'custom_avatar_id', true);
+        
+        if ($attachment_id) {
+        $avatar_url = wp_get_attachment_url($attachment_id);
+        }else {
+        $avatar_url = get_avatar_url($user_id);
+        }
+
         $response = [
             'id' => $user_id,
             'username' => $user->user_login,
             'name' => $user->display_name,
             'email' => $user->user_email,
+            'avatar_url' => $avatar_url
         ];
         return rest_ensure_response($response);
     }

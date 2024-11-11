@@ -8,9 +8,9 @@ function api_exercicio_post($request) {
     }
 
     $nome = sanitize_text_field($request['nome']);
-    $tipo_nado = sanitize_text_field($request['tipo_nado']);
-    $equipamentos = sanitize_text_field($request['equipamentos']);
-    $personalizado = sanitize_text_field($request['personalizado']);
+    $tipo_nado = array_map('sanitize_text_field', $request['tipo_nado']);
+    $equipamentos = array_map('sanitize_text_field', $request['equipamentos']);
+    $personalizado = filter_var($request['personalizado'], FILTER_VALIDATE_BOOLEAN);
 
     $exercicio_id = wp_insert_post(array(
         'post_type' => 'exercicios',

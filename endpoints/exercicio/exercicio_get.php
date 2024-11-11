@@ -2,18 +2,13 @@
 function api_exercicio_get($request) {
     $user = wp_get_current_user();
     $user_id = $user->ID;
-
-    if ($user_id === 0) {
-        return new WP_Error('error', 'Usuário não autorizado', ['status' => 401]);
-    }
-
     $exercicio_id = $request['id'];
 
     if ($exercicio_id) {
         // Recupera um exercício específico
         $exercicio = get_post($exercicio_id);
 
-        if (!$exercicio || $exercicio->post_type !== 'exercicios' || $exercicio->post_author != $user_id) {
+        if (!$exercicio || $exercicio->post_type !== 'exercicios') {
             return new WP_Error('error', 'Exercício não encontrado', ['status' => 404]);
         }
 
@@ -32,8 +27,30 @@ function api_exercicio_get($request) {
             'posts_per_page' => -1
         ));
 
+       // Recupera todos os exercícios onde 'personalizado' é vazio ou 'false'
+        $exercicios_personalizados = get_posts(array(
+            'post_type' => 'exercicios',
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'personalizado',
+                    'value' => '',
+                    'compare' => '='
+                ),
+                array(
+                    'key' => 'personalizado',
+                    'value' => 'false',
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => -1
+        ));
+
+        // Combina os resultados, sem duplicatas
+        $all_exercicios = array_unique(array_merge($exercicios, $exercicios_personalizados), SORT_REGULAR);
+
         $response = array();
-        foreach ($exercicios as $exercicio) {
+        foreach ($all_exercicios as $exercicio) {
             $response[] = array(
                 'id' => $exercicio->ID,
                 'nome' => $exercicio->post_title,

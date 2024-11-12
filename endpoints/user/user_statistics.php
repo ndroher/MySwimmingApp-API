@@ -173,7 +173,7 @@ function api_user_statistics($request) {
         'repeticoes_por_tipo_de_nado' => $repeticoes_por_tipo_de_nado,
         'distancia_por_dia' => $distancia_por_dia,
         'atividades_por_semana' => $atividades_por_semana,
-        'exercicio_mais_realizado_id' => $exercicio_mais_realizado_id,
+        'exercicio_mais_realizado_id' => isset($exercicio_mais_realizado_id) ? $exercicio_mais_realizado_id : null,
     );
 
     return rest_ensure_response($response);
